@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
-    default: null
+    default: "/img/dp.jpg"
   },
   isOnline: {
     type: Boolean,
@@ -33,29 +33,6 @@ const userSchema = new mongoose.Schema({
   lastSeen: {
     type: Date,
     default: Date.now
-  },
-  friends: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  blockedUsers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  preferences: {
-    theme: {
-      type: String,
-      enum: ['light', 'dark', 'auto'],
-      default: 'auto'
-    },
-    notifications: {
-      type: Boolean,
-      default: true
-    },
-    soundEnabled: {
-      type: Boolean,
-      default: true
-    }
   }
 }, {
   timestamps: true
@@ -73,8 +50,7 @@ userSchema.virtual('profile').get(function() {
     username: this.username,
     email: this.email,
     avatar: this.avatar,
-    isOnline: this.isOnline,
-    lastSeen: this.lastSeen
+    isOnline: this.isOnline
   };
 });
 
@@ -89,6 +65,6 @@ userSchema.pre('save', function(next) {
   next();
 });
 
-const User = mongoose.models.User || mongoose.model('User', userSchema);
+const User = mongoose.models.User || mongoose.model('Users', userSchema);
 
 export default User;
