@@ -8,7 +8,16 @@ export async function POST(request) {
   try {
     await connectDB();
     
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      return NextResponse.json({
+        success: false,
+        message: 'Invalid JSON in request body'
+      }, { status: 400 });
+    }
+    
     const { email, password } = body;
     
     // Validation
