@@ -49,7 +49,16 @@ export async function PUT(request, { params }) {
     await connectDB();
     
     const { id } = params;
-    const body = await request.json();
+    
+    let body;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      return NextResponse.json({
+        success: false,
+        message: 'Invalid JSON in request body'
+      }, { status: 400 });
+    }
     
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {

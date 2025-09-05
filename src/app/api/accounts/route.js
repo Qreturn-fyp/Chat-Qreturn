@@ -1,98 +1,79 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
-import bcrypt from 'bcryptjs';
 
-// GET - Get all accounts
-export async function GET() {
+// Create Account
+export async function POST(req) {
   try {
-    await connectDB();
-    
-    const users = await User.find({}, { password: 0 }).sort({ createdAt: -1 });
-    
-    return NextResponse.json({
-      success: true,
-      data: users,
-      count: users.length
-    });
-  } catch (error) {
-    console.error('Get all accounts error:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Failed to fetch accounts',
-      error: error.message
-    }, { status: 500 });
-  }
-}
+    let data;
+    try {
+      data = await req.json();
+    } catch (jsonError) {
+      return NextResponse.json(
+        { message: "Invalid JSON data" },
+        { status: 400 }
+      );
+    }
 
-// POST - Create new account
-export async function POST(request) {
-  try {
     await connectDB();
-    
-    const body = await request.json();
-    const { username, email, password } = body;
-    
-    // Validation
+
+    // Single object validation
+    const { username, email, password } = data;
     if (!username || !email || !password) {
-      return NextResponse.json({
-        success: false,
-        message: 'Username, email, and password are required'
-      }, { status: 400 });
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
     }
-    
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
-    });
-    
-    if (existingUser) {
-      return NextResponse.json({
-        success: false,
-        message: existingUser.email === email ? 'Email already exists' : 'Username already exists'
-      }, { status: 409 });
-    }
-    
-    // Hash password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    
-    // Create user
-    const user = new User({
-      username,
-      email,
-      password: hashedPassword
-    });
-    
-    await user.save();
-    
-    // Return user without password
-    const userResponse = user.toObject();
-    delete userResponse.password;
-    
-    return NextResponse.json({
-      success: true,
-      message: 'Account created successfully',
-      data: userResponse
-    }, { status: 201 });
-    
+
+    // Create new user
+    const newUser = new User(data);
+    const user = await newUser.save();
+
+    if (!user) return NextResponse.json({ message: "Failed to create" }, { status: 500 });
+    return NextResponse.json({ message: "Account Create Successfull", user }, { status: 201 });
+
   } catch (error) {
-    console.error('Create account error:', error);
-    
-    // Handle validation errors
-    if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map(err => err.message);
-      return NextResponse.json({
-        success: false,
-        message: 'Validation failed',
-        errors
-      }, { status: 400 });
-    }
-    
-    return NextResponse.json({
-      success: false,
-      message: 'Failed to create account',
-      error: error.message
-    }, { status: 500 });
+    console.error("Error creating User", error);
+    return NextResponse.json(
+      { message: "Failed to create User" },
+      { status: 500 }
+    );
   }
 }
+
+
+// get all Users
+export async function GET(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const email = searchParams.get("email");
+    await connectDB();
+
+    if (email) {
+      const user = await User.find({ email: email });
+      if (!user || user.length === 0) {
+        return NextResponse.json({ message: "User not found" }, { status: 404 });
+      } else {
+        return NextResponse.json(
+          { message: "User retrieved successfully", user: user },
+          { status: 200 }
+        );
+      }
+    }
+    // Find all lost posts
+    const user = await User.find();
+
+    return NextResponse.json(
+      { message: "Users retrieved successfully", users: user },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error fetching Users:", error);
+    return NextResponse.json(
+      { message: "Failed to fetch Users" },
+      { status: 500 }
+    );
+  }
+}
+

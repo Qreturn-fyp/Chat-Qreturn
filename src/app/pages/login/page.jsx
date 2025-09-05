@@ -1,1 +1,7 @@
-rdf
+
+export default function Login() {
+    return (
+        <>
+        </>
+    );
+}

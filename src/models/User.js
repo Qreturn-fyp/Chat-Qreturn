@@ -38,9 +38,7 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better query performance
-userSchema.index({ email: 1 });
-userSchema.index({ username: 1 });
+// Index for better query performance (email and username already have unique indexes)
 userSchema.index({ isOnline: 1 });
 
 // Virtual for user's full profile
@@ -65,6 +63,6 @@ userSchema.pre('save', function(next) {
   next();
 });
 
-const User = mongoose.models.User || mongoose.model('Users', userSchema);
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 export default User;
