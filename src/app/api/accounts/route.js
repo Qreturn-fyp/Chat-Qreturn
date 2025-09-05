@@ -43,13 +43,14 @@ export async function POST(req) {
 }
 
 
-// get all Users
+// get all users or get user by email
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
     await connectDB();
 
+    // get by email
     if (email) {
       const user = await User.find({ email: email });
       if (!user || user.length === 0) {
@@ -61,9 +62,9 @@ export async function GET(req) {
         );
       }
     }
+
     // Find all lost posts
     const user = await User.find();
-
     return NextResponse.json(
       { message: "Users retrieved successfully", users: user },
       { status: 200 }
