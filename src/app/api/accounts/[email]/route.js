@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
-import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 
 // GET - Get account by ID
@@ -38,7 +37,7 @@ export async function PUT(request, { params }) {
   try {
     await connectDB();
 
-    const { id } = params;
+    const { email } = params;
 
     let body;
     try {
@@ -50,96 +49,26 @@ export async function PUT(request, { params }) {
       }, { status: 400 });
     }
 
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({
-        success: false,
-        message: 'Invalid account ID'
-      }, { status: 400 });
-    }
-
     // Check if user exists
-    const existingUser = await User.findById(id);
-    if (!existingUser) {
+    const user = await User.find({ email: email });
+    if (!user || user.length === 0) {
       return NextResponse.json({
         success: false,
         message: 'Account not found'
       }, { status: 404 });
-    }
-
-    // Prepare update data
-    const updateData = {};
-
-    // Update username if provided
-    if (body.username) {
-      // Check if username is already taken by another user
-      const usernameExists = await User.findOne({
-        username: body.username,
-        _id: { $ne: id }
+    } else {
+      const userUpdate = await User.findOneAndUpdate(
+        { email: email },
+        body,
+        { new: true , runValidators: true}
+      ).select('-password');
+      return NextResponse.json({
+        success: true,
+        message: 'User Avvout Updated Successfully',
+        data: userUpdate
       });
 
-      if (usernameExists) {
-        return NextResponse.json({
-          success: false,
-          message: 'Username already exists'
-        }, { status: 409 });
-      }
-      updateData.username = body.username;
     }
-
-    // Update email if provided
-    if (body.email) {
-      // Check if email is already taken by another user
-      const emailExists = await User.findOne({
-        email: body.email,
-        _id: { $ne: id }
-      });
-
-      if (emailExists) {
-        return NextResponse.json({
-          success: false,
-          message: 'Email already exists'
-        }, { status: 409 });
-      }
-      updateData.email = body.email;
-    }
-
-    // Update password if provided
-    if (body.password) {
-      const saltRounds = 12;
-      updateData.password = await bcrypt.hash(body.password, saltRounds);
-    }
-
-    // Update avatar if provided
-    if (body.avatar !== undefined) {
-      updateData.avatar = body.avatar;
-    }
-
-    // Update online status if provided
-    if (body.isOnline !== undefined) {
-      updateData.isOnline = body.isOnline;
-      if (body.isOnline) {
-        updateData.lastSeen = new Date();
-      }
-    }
-
-    // Update preferences if provided
-    if (body.preferences) {
-      updateData.preferences = { ...existingUser.preferences, ...body.preferences };
-    }
-
-    // Perform update
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    ).select('-password');
-
-    return NextResponse.json({
-      success: true,
-      message: 'Account updated successfully',
-      data: updatedUser
-    });
 
   } catch (error) {
     console.error('Update account error:', error);
