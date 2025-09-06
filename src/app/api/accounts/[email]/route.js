@@ -8,31 +8,21 @@ import mongoose from 'mongoose';
 export async function GET(request, { params }) {
   try {
     await connectDB();
-    
-    const { id } = params;
-    
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({
-        success: false,
-        message: 'Invalid account ID'
-      }, { status: 400 });
+
+    const { email } = params;
+
+    // // get by email
+    const user = await User.find({ email: email });
+    if (!user || user.length === 0) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    } else {
+      return NextResponse.json(
+        { message: "User retrieved successfully", user: user },
+        { status: 200 }
+      );
     }
-    
-    const user = await User.findById(id, { password: 0 });
-    
-    if (!user) {
-      return NextResponse.json({
-        success: false,
-        message: 'Account not found'
-      }, { status: 404 });
-    }
-    
-    return NextResponse.json({
-      success: true,
-      data: user
-    });
-    
+
+
   } catch (error) {
     console.error('Get account by ID error:', error);
     return NextResponse.json({
@@ -47,9 +37,9 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     await connectDB();
-    
+
     const { id } = params;
-    
+
     let body;
     try {
       body = await request.json();
@@ -59,7 +49,7 @@ export async function PUT(request, { params }) {
         message: 'Invalid JSON in request body'
       }, { status: 400 });
     }
-    
+
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({
@@ -67,7 +57,7 @@ export async function PUT(request, { params }) {
         message: 'Invalid account ID'
       }, { status: 400 });
     }
-    
+
     // Check if user exists
     const existingUser = await User.findById(id);
     if (!existingUser) {
@@ -76,10 +66,10 @@ export async function PUT(request, { params }) {
         message: 'Account not found'
       }, { status: 404 });
     }
-    
+
     // Prepare update data
     const updateData = {};
-    
+
     // Update username if provided
     if (body.username) {
       // Check if username is already taken by another user
@@ -87,7 +77,7 @@ export async function PUT(request, { params }) {
         username: body.username,
         _id: { $ne: id }
       });
-      
+
       if (usernameExists) {
         return NextResponse.json({
           success: false,
@@ -96,7 +86,7 @@ export async function PUT(request, { params }) {
       }
       updateData.username = body.username;
     }
-    
+
     // Update email if provided
     if (body.email) {
       // Check if email is already taken by another user
@@ -104,7 +94,7 @@ export async function PUT(request, { params }) {
         email: body.email,
         _id: { $ne: id }
       });
-      
+
       if (emailExists) {
         return NextResponse.json({
           success: false,
@@ -113,18 +103,18 @@ export async function PUT(request, { params }) {
       }
       updateData.email = body.email;
     }
-    
+
     // Update password if provided
     if (body.password) {
       const saltRounds = 12;
       updateData.password = await bcrypt.hash(body.password, saltRounds);
     }
-    
+
     // Update avatar if provided
     if (body.avatar !== undefined) {
       updateData.avatar = body.avatar;
     }
-    
+
     // Update online status if provided
     if (body.isOnline !== undefined) {
       updateData.isOnline = body.isOnline;
@@ -132,28 +122,28 @@ export async function PUT(request, { params }) {
         updateData.lastSeen = new Date();
       }
     }
-    
+
     // Update preferences if provided
     if (body.preferences) {
       updateData.preferences = { ...existingUser.preferences, ...body.preferences };
     }
-    
+
     // Perform update
     const updatedUser = await User.findByIdAndUpdate(
       id,
       updateData,
       { new: true, runValidators: true }
     ).select('-password');
-    
+
     return NextResponse.json({
       success: true,
       message: 'Account updated successfully',
       data: updatedUser
     });
-    
+
   } catch (error) {
     console.error('Update account error:', error);
-    
+
     // Handle validation errors
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map(err => err.message);
@@ -163,7 +153,7 @@ export async function PUT(request, { params }) {
         errors
       }, { status: 400 });
     }
-    
+
     return NextResponse.json({
       success: false,
       message: 'Failed to update account',
@@ -176,9 +166,9 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     await connectDB();
-    
+
     const { id } = params;
-    
+
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({
@@ -186,21 +176,21 @@ export async function DELETE(request, { params }) {
         message: 'Invalid account ID'
       }, { status: 400 });
     }
-    
+
     const user = await User.findByIdAndDelete(id);
-    
+
     if (!user) {
       return NextResponse.json({
         success: false,
         message: 'Account not found'
       }, { status: 404 });
     }
-    
+
     return NextResponse.json({
       success: true,
       message: 'Account deleted successfully'
     });
-    
+
   } catch (error) {
     console.error('Delete account error:', error);
     return NextResponse.json({
