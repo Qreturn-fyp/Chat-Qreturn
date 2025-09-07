@@ -32,7 +32,7 @@ export async function GET(request, { params }) {
   }
 }
 
-// PUT - Update account by ID
+// PUT - Update account by email
 export async function PUT(request, { params }) {
   try {
     await connectDB();
@@ -91,22 +91,14 @@ export async function PUT(request, { params }) {
   }
 }
 
-// DELETE - Delete account by ID
+// DELETE - Delete account by email
 export async function DELETE(request, { params }) {
   try {
     await connectDB();
 
-    const { id } = params;
+    const { email } = params;
 
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({
-        success: false,
-        message: 'Invalid account ID'
-      }, { status: 400 });
-    }
-
-    const user = await User.findByIdAndDelete(id);
+    const user = await User.findOneAndDelete({ email: email });
 
     if (!user) {
       return NextResponse.json({
