@@ -3,7 +3,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import mongoose from 'mongoose';
 
-// GET - Get account by ID
+// GET - Get account by email
 export async function GET(request, { params }) {
   try {
     await connectDB();
@@ -64,7 +64,7 @@ export async function PUT(request, { params }) {
       ).select('-password');
       return NextResponse.json({
         success: true,
-        message: 'User Avvout Updated Successfully',
+        message: 'User Updated Successfully',
         data: userUpdate
       });
 

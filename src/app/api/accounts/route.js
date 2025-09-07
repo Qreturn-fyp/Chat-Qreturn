@@ -48,21 +48,6 @@ export async function GET(req) {
   try {
     await connectDB();
 
-    // // get by email&pw
-    // if (account) {
-    //   const email = account.split(",")[0];
-    //   const password = account.split(",")[1];
-    //   const user = await User.find({ email: email , password: password });
-    //   if (!user || user.length === 0) {
-    //     return NextResponse.json({ message: "User not found" }, { status: 404 });
-    //   } else {
-    //     return NextResponse.json(
-    //       { message: "User retrieved successfully", user: user },
-    //       { status: 200 }
-    //     );
-    //   }
-    // }
-
     // Find all lost posts
     const user = await User.find();
     return NextResponse.json(
