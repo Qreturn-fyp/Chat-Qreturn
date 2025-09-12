@@ -2,6 +2,7 @@
 import NavBar from '@/component/Nav/NavBar';
 import Link from 'next/link'
 import { useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -23,6 +24,10 @@ export default function Login() {
     return (
         <>
             <NavBar />
+            <Toaster
+                position="top-center"
+                reverseOrder={false}
+            />
             <div className="flex flex-col items-center justify-center py-2 mt-40 m-1">
                 <div className="bg-gray-900 p-6 rounded-lg shadow-md w-full max-w-md">
                     <div className="mb-8 justify-center items-center">
