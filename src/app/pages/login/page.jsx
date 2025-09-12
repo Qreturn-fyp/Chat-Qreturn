@@ -1,7 +1,7 @@
 "use client"
 import NavBar from '@/component/Nav/NavBar';
 import Link from 'next/link'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function Login() {
@@ -18,6 +18,10 @@ export default function Login() {
             email: email,
             password: password
         };
+        // if (password !== repassword) {
+        //     toast.error("Passwords do not match!");
+        //     return;
+        // };
         console.log(data);
     };
 
