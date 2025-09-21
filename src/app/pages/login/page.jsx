@@ -3,26 +3,59 @@ import NavBar from '@/component/Nav/NavBar';
 import Link from 'next/link'
 import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const { login } = useAuth();
 
 
     useEffect(() => {
-        handleLogin();
+        setData();
     }, [password, email]);
 
-    const handleLogin = () => {
+    const setData=()=>{
         const data = {
             email: email,
             password: password
         };
-        // if (password !== repassword) {
-        //     toast.error("Passwords do not match!");
-        //     return;
-        // };
         console.log(data);
+    }
+
+    const handleLogin = async () => {
+        // Validate input
+        if (!email || !password) {
+            toast.error("Please fill in all fields!");
+            return;
+        }
+
+        // login user
+        try {
+            const res = await fetch("/api/auth/login/" + email + "/" + password, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+            
+            const data = await res.json();
+            
+            if (res.ok) {
+                toast.success(data.message);
+                // Use AuthContext to manage user state
+                login(data.user);
+                // Redirect to dashboard after successful login
+                setTimeout(() => {
+                    window.location.href = '/pages/dashboard';
+                }, 1500);
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            console.error("Error during login:", error);
+            toast.error("Login failed. Please try again.");
+        }
     };
 
     return (
