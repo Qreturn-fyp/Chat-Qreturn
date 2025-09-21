@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
-import mongoose from 'mongoose';
 
 export async function GET(request, { params }) {
     try {
