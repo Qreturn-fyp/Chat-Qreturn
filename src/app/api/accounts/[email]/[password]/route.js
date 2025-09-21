@@ -5,10 +5,10 @@ import User from '@/models/User';
 export async function GET(request, { params }) {
     try {
         await connectDB();
-        const { email, passwaord } = params;
+        const { email, password } = params;
 
-        // // get by email and password
-        const user = await User.findOne({ email: email, password: passwaord });
+        // Find user by email and password
+        const user = await User.findOne({ email: email, password: password });
         if (!user) {
             return NextResponse.json({ message: "User not found or username and password not matched" }, { status: 404 });
         } else {
